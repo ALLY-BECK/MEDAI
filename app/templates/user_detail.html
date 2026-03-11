@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.full_name }} - MEDAI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white p-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">{{ user.full_name }}</h2>
+            <a href="{{ url_for('admin.users') }}" class="btn btn-light btn-sm">Назад к списку</a>
+        </div>
+    </div>
+    <div class="card-body p-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="mb-3 text-muted">Информация:</h5>
+                <div class="mb-3">
+                    <label class="form-label">ID пользователя:</label>
+                    <p class="form-control-plaintext"><strong>{{ user.id }}</strong></p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Полное имя:</label>
+                    <p class="form-control-plaintext"><strong>{{ user.full_name }}</strong></p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email:</label>
+                    <p class="form-control-plaintext">
+                        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ИИН:</label>
+                    <p class="form-control-plaintext">
+                        {% if user.iin %}
+                            <strong>{{ user.iin }}</strong>
+                        {% else %}
+                            <span class="text-muted">Не указан</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Номер телефона:</label>
+                    <p class="form-control-plaintext">
+                        {% if user.phone %}
+                            <strong>{{ user.phone }}</strong>
+                        {% else %}
+                            <span class="text-muted">Не указан</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Дата регистрации:</label>
+                    <p class="form-control-plaintext">
+                        <strong>
+                            {% if user.created_at %}
+                                {{ user.created_at.strftime('%d.%m.%Y в %H:%M:%S') }}
+                            {% else %}
+                                Неизвестно
+                            {% endif %}
+                        </strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="alert alert-info">
+                    <h5>Метод регистрации:</h5>
+                    {% if user.iin %}
+                        <p class="mb-0"><strong>По ИИН</strong></p>
+                    {% elif user.phone %}
+                        <p class="mb-0"><strong>По номеру телефона</strong></p>
+                    {% else %}
+                        <p class="mb-0"><strong>По Email</strong></p>
+                    {% endif %}
+                </div>
+
+                <div class="alert alert-success">
+                    <h5>Статус аккаунта:</h5>
+                    <p class="mb-0"><strong style="color: green;">✓ Активный</strong></p>
+                </div>
+
+                <div class="card border-light">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Дополнительная информация</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-2">
+                            <strong>Способ идентификации:</strong>
+                        </p>
+                        {% if user.iin %}
+                            <span class="badge bg-primary">ИИН</span>
+                        {% endif %}
+                        {% if user.phone %}
+                            <span class="badge bg-warning">Телефон</span>
+                        {% endif %}
+                        <span class="badge bg-secondary">Email</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Вход - MEDAI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-5">
+        <h1 class="text-center mb-4">Вход в систему</h1>
+
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                {{ form.login.label(class="form-label") }}
+                <small class="d-block text-muted mb-2">Введите Email, ИИН или номер телефона</small>
+                {% if form.login.errors %}
+                    {{ form.login(class="form-control is-invalid") }}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.login.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.login(class="form-control", placeholder="Email, ИИН или телефон") }}
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                {{ form.password.label(class="form-label") }}
+                {% if form.password.errors %}
+                    {{ form.password(class="form-control is-invalid") }}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.password.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.password(class="form-control") }}
+                {% endif %}
+            </div>
+
+            <div class="d-grid">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+            </div>
+        </form>
+
+        <hr class="my-4">
+
+        <div class="text-center">
+            <p>Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрируйтесь здесь</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
