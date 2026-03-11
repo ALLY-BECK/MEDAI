@@ -12,7 +12,7 @@ admin_bp = Blueprint('admin', __name__)
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('admin.dashboard'))
-    return redirect(url_for('auth.login'))
+    return render_template('index.html')
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])

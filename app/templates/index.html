@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}MEDAI - Выберите роль{% endblock %}
+
+{% block extra_css %}
+<style>
+    .role-section {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+    .medai-logo {
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+        letter-spacing: 3px;
+        margin-bottom: 8px;
+        text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    .medai-subtitle {
+        color: rgba(255,255,255,0.85);
+        font-size: 1.1rem;
+        margin-bottom: 50px;
+        text-align: center;
+    }
+    .roles-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 900px;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    .roles-grid-bottom {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        max-width: 600px;
+        width: 100%;
+    }
+    .role-card {
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 35px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+    .role-card:hover {
+        background: rgba(255, 255, 255, 0.22);
+        transform: translateY(-6px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        text-decoration: none;
+    }
+    .role-icon {
+        font-size: 3rem;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .role-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .role-desc {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.7);
+        line-height: 1.4;
+    }
+    .role-card.minzdrav { border-color: rgba(59, 200, 255, 0.4); }
+    .role-card.admin    { border-color: rgba(255, 180, 50, 0.4); }
+    .role-card.doctor   { border-color: rgba(100, 255, 180, 0.4); }
+    .role-card.patient  { border-color: rgba(255, 120, 180, 0.4); }
+    .role-card.pharmacy { border-color: rgba(200, 130, 255, 0.4); }
+
+    .role-card.minzdrav:hover { background: rgba(59, 200, 255, 0.2); }
+    .role-card.admin:hover    { background: rgba(255, 180, 50, 0.2); }
+    .role-card.doctor:hover   { background: rgba(100, 255, 180, 0.2); }
+    .role-card.patient:hover  { background: rgba(255, 120, 180, 0.2); }
+    .role-card.pharmacy:hover { background: rgba(200, 130, 255, 0.2); }
+
+    @media (max-width: 768px) {
+        .roles-grid { grid-template-columns: 1fr 1fr; }
+        .roles-grid-bottom { grid-template-columns: 1fr; }
+        .medai-logo { font-size: 2rem; }
+    }
+    @media (max-width: 480px) {
+        .roles-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="role-section">
+    <div class="medai-logo">⚕ MEDAI</div>
+    <div class="medai-subtitle">Цифровая медицинская платформа Казахстана<br>Выберите вашу роль для входа в систему</div>
+
+    <div class="roles-grid">
+        <a href="{{ url_for('auth.login') }}?role=minzdrav" class="role-card minzdrav">
+            <div class="role-icon">🏛️</div>
+            <div class="role-name">Минздрав</div>
+            <div class="role-desc">Министерство здравоохранения. Контроль и аналитика</div>
+        </a>
+        <a href="{{ url_for('auth.login') }}?role=admin" class="role-card admin">
+            <div class="role-icon">⚙️</div>
+            <div class="role-name">Администрация</div>
+            <div class="role-desc">Управление медицинскими учреждениями</div>
+        </a>
+        <a href="{{ url_for('auth.login') }}?role=doctor" class="role-card doctor">
+            <div class="role-icon">👨‍⚕️</div>
+            <div class="role-name">Врач</div>
+            <div class="role-desc">Приём пациентов, расписание, история болезней</div>
+        </a>
+    </div>
+
+    <div class="roles-grid-bottom" style="margin-top: 20px;">
+        <a href="{{ url_for('auth.login') }}?role=patient" class="role-card patient">
+            <div class="role-icon">🧑‍💼</div>
+            <div class="role-name">Пациент</div>
+            <div class="role-desc">Запись к врачу, результаты анализов, рецепты</div>
+        </a>
+        <a href="{{ url_for('auth.login') }}?role=pharmacy" class="role-card pharmacy">
+            <div class="role-icon">💊</div>
+            <div class="role-name">Аптека</div>
+            <div class="role-desc">Управление лекарствами и рецептами</div>
+        </a>
+    </div>
+</div>
+{% endblock %}

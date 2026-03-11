@@ -2,9 +2,45 @@
 
 {% block title %}Вход - MEDAI{% endblock %}
 
+{% block extra_css %}
+<style>
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(102,126,234,0.15), rgba(118,75,162,0.15));
+    border: 1px solid rgba(102,126,234,0.3);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 0.9rem;
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="card">
     <div class="card-body p-5">
+
+        {% set role = request.args.get('role', '') %}
+        {% if role %}
+        <div class="text-center mb-3">
+            {% if role == 'minzdrav' %}
+            <span class="role-badge">🏛️ Минздрав</span>
+            {% elif role == 'admin' %}
+            <span class="role-badge">⚙️ Администрация</span>
+            {% elif role == 'doctor' %}
+            <span class="role-badge">👨‍⚕️ Врач</span>
+            {% elif role == 'patient' %}
+            <span class="role-badge">🧑‍💼 Пациент</span>
+            {% elif role == 'pharmacy' %}
+            <span class="role-badge">💊 Аптека</span>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <h1 class="text-center mb-4">Вход в систему</h1>
 
         <form method="POST" novalidate>
@@ -16,9 +52,7 @@
                 {% if form.login.errors %}
                     {{ form.login(class="form-control is-invalid") }}
                     <div class="invalid-feedback d-block">
-                        {% for error in form.login.errors %}
-                            {{ error }}<br>
-                        {% endfor %}
+                        {% for error in form.login.errors %}{{ error }}<br>{% endfor %}
                     </div>
                 {% else %}
                     {{ form.login(class="form-control", placeholder="Email, ИИН или телефон") }}
@@ -30,9 +64,7 @@
                 {% if form.password.errors %}
                     {{ form.password(class="form-control is-invalid") }}
                     <div class="invalid-feedback d-block">
-                        {% for error in form.password.errors %}
-                            {{ error }}<br>
-                        {% endfor %}
+                        {% for error in form.password.errors %}{{ error }}<br>{% endfor %}
                     </div>
                 {% else %}
                     {{ form.password(class="form-control") }}
@@ -47,7 +79,8 @@
         <hr class="my-4">
 
         <div class="text-center">
-            <p>Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрируйтесь здесь</a></p>
+            <p class="mb-2">Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрируйтесь здесь</a></p>
+            <a href="{{ url_for('auth.index') }}" class="text-muted small">← Выбор роли</a>
         </div>
     </div>
 </div>
