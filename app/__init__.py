@@ -10,10 +10,20 @@ def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
 
     # Конфигурация
-    app.config['SECRET_KEY'] = 'your-secret-key-change-in-production-12345'
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.join(os.path.dirname(basedir), 'medai.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production-12345')
+
+    # Используем DATABASE_URL если задан (PostgreSQL), иначе SQLite в /tmp (для Vercel)
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        # Heroku/Railway передают postgres://, SQLAlchemy требует postgresql://
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    else:
+        # /tmp — единственная writable директория на Vercel
+        db_path = os.path.join('/tmp', 'medai.db')
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Инициализация расширений
