@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
-from app import db
+from app import db, limiter
 from app.models import User
 from app.forms import RegistrationForm, LoginForm
-
+import redis
+import os
 auth_bp = Blueprint('auth', __name__)
 admin_bp = Blueprint('admin', __name__)
 
@@ -45,6 +46,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.dashboard'))
@@ -77,6 +79,28 @@ def logout():
     logout_user()
     flash('Вы вышли из аккаунта.', 'success')
     return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/health')
+def health_check():
+    db_status = "ok"
+    try:
+        db.session.execute(db.text('SELECT 1'))
+    except Exception:
+        db_status = "error"
+        
+    cache_status = "ok"
+    try:
+        r = redis.Redis.from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
+        r.ping()
+    except Exception:
+        cache_status = "error"
+        
+    return jsonify({
+        "status": "ok" if db_status == "ok" and cache_status == "ok" else "error",
+        "database": db_status,
+        "cache": cache_status
+    }), 200
 
 
 # Маршруты администратора

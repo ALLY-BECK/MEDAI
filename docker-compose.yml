@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: medai_db
+    restart: always
+    environment:
+      POSTGRES_USER: medai_user
+      POSTGRES_PASSWORD: medai_password
+      POSTGRES_DB: medai_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medai_user -d medai_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: medai_web
+    restart: always
+    command: >
+      sh -c "flask db upgrade || python manage.py init_db && gunicorn --bind 0.0.0.0:5000 wsgi:app"
+    ports:
+      - "5001:5000"
+    environment:
+      - DATABASE_URL=postgresql://medai_user:medai_password@db:5432/medai_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-prod-54321
+      - FLASK_APP=run.py
+      - FLASK_DEBUG=1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - .:/app
+
+  redis:
+    image: redis:7-alpine
+    container_name: medai_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: .
+    container_name: medai_worker
+    restart: always
+    command: >
+      sh -c "celery -A app.celery_app worker --loglevel=info"
+    environment:
+      - DATABASE_URL=postgresql://medai_user:medai_password@db:5432/medai_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-prod-54321
+      - FLASK_APP=run.py
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:

@@ -1,10 +1,20 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_migrate import Migrate
 import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+migrate = Migrate()
+
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri=os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+)
 
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -28,13 +38,12 @@ def create_app():
 
     # Инициализация расширений
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    limiter.init_app(app)
 
-    # Создание таблиц
-    with app.app_context():
-        from app.models import User
-        db.create_all()
+
 
     # Регистрация blueprints
     from app.routes import auth_bp, admin_bp
