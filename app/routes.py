@@ -1,9 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
-from app import db
+from app import db, limiter
 from app.models import User
-from app.forms import RegistrationForm, LoginForm
-
+from app.forms import RegistrationForm, LoginForm, Verify2FAForm
+import redis
+import os
+import pyotp
+import qrcode
+import base64
+from io import BytesIO
 auth_bp = Blueprint('auth', __name__)
 admin_bp = Blueprint('admin', __name__)
 
@@ -45,6 +50,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.dashboard'))
@@ -62,6 +68,10 @@ def login():
         ).first()
 
         if user and user.check_password(password):
+            if user.is_2fa_enabled:
+                session['pending_2fa_user_id'] = user.id
+                return redirect(url_for('auth.verify_2fa', next=request.args.get('next')))
+                
             login_user(user)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('admin.dashboard'))
@@ -75,8 +85,94 @@ def login():
 @login_required
 def logout():
     logout_user()
+    session.pop('pending_2fa_user_id', None)
     flash('Вы вышли из аккаунта.', 'success')
     return redirect(url_for('auth.login'))
+
+@auth_bp.route('/setup_2fa', methods=['GET', 'POST'])
+@login_required
+def setup_2fa():
+    if current_user.is_2fa_enabled:
+        flash('Двухфакторная аутентификация уже включена.', 'info')
+        return redirect(url_for('admin.dashboard'))
+
+    if not current_user.totp_secret:
+        current_user.totp_secret = pyotp.random_base32()
+        db.session.commit()
+
+    form = Verify2FAForm()
+
+    if form.validate_on_submit():
+        totp = pyotp.TOTP(current_user.totp_secret)
+        if totp.verify(form.code.data):
+            current_user.is_2fa_enabled = True
+            db.session.commit()
+            flash('Двухфакторная аутентификация успешно включена!', 'success')
+            return redirect(url_for('admin.dashboard'))
+        else:
+            flash('Неверный код. Попробуйте еще раз.', 'danger')
+
+    # Генерируем QR-код
+    totp = pyotp.TOTP(current_user.totp_secret)
+    provisioning_uri = totp.provisioning_uri(name=current_user.email, issuer_name="MEDAI")
+    
+    qr = qrcode.make(provisioning_uri)
+    buf = BytesIO()
+    qr.save(buf, format="PNG")
+    qr_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    return render_template('setup_2fa.html', form=form, qr_base64=qr_base64, secret=current_user.totp_secret)
+
+
+@auth_bp.route('/verify_2fa', methods=['GET', 'POST'])
+def verify_2fa():
+    if current_user.is_authenticated:
+        return redirect(url_for('admin.dashboard'))
+
+    user_id = session.get('pending_2fa_user_id')
+    if not user_id:
+        flash('Пожалуйста, войдите в систему.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    user = User.query.get(user_id)
+    if not user:
+        session.pop('pending_2fa_user_id', None)
+        return redirect(url_for('auth.login'))
+
+    form = Verify2FAForm()
+    if form.validate_on_submit():
+        totp = pyotp.TOTP(user.totp_secret)
+        if totp.verify(form.code.data):
+            login_user(user)
+            session.pop('pending_2fa_user_id', None)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('admin.dashboard'))
+        else:
+            flash('Неверный код.', 'danger')
+
+    return render_template('verify_2fa.html', form=form)
+
+
+@auth_bp.route('/health')
+def health_check():
+    db_status = "ok"
+    try:
+        db.session.execute(db.text('SELECT 1'))
+    except Exception:
+        db_status = "error"
+        
+    cache_status = "ok"
+    try:
+        r = redis.Redis.from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379/0'))
+        r.ping()
+    except Exception:
+        cache_status = "error"
+        
+    return jsonify({
+        "status": "ok" if db_status == "ok" and cache_status == "ok" else "error",
+        "database": db_status,
+        "cache": cache_status
+    }), 200
 
 
 # Маршруты администратора

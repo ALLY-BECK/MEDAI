@@ -12,6 +12,10 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     full_name = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    # 2FA fields
+    totp_secret = db.Column(db.String(32), nullable=True)
+    is_2fa_enabled = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         """Установить хешированный пароль"""

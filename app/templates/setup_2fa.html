@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Настройка 2FA - MEDAI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-5 text-center">
+        <h2 class="mb-4">Настройка Двухфакторной Аутентификации (2FA)</h2>
+        <p>1. Установите приложение <strong>Google Authenticator</strong> на ваш смартфон.</p>
+        <p>2. Отсканируйте этот QR-код в приложении:</p>
+        
+        <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code" class="img-fluid mb-4" style="max-width: 250px;">
+        
+        <p class="text-muted small">Если вы не можете отсканировать QR-код, введите этот секретный ключ вручную: <strong>{{ secret }}</strong></p>
+
+        <hr class="my-4">
+
+        <h4 class="mb-3">3. Подтвердите настройку</h4>
+        <form method="POST" class="mx-auto" style="max-width: 300px;" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3 text-start">
+                {{ form.code.label(class="form-label") }}
+                {% if form.code.errors %}
+                    {{ form.code(class="form-control is-invalid", placeholder="123456") }}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.code.errors %}{{ error }}<br>{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.code(class="form-control", placeholder="123456") }}
+                {% endif %}
+            </div>
+            <div class="d-grid">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
