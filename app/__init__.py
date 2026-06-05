@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 import os
+from flask_cors import CORS
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -21,6 +22,10 @@ def create_app():
 
     # Конфигурация
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production-12345')
+
+    # Настройка CORS
+    allowed_origin = os.environ.get('ALLOWED_ORIGIN', 'https://yourdomain.com')
+    CORS(app, resources={r"/*": {"origins": allowed_origin}})
 
     # Используем DATABASE_URL если задан (PostgreSQL), иначе SQLite в /tmp (для Vercel)
     database_url = os.environ.get('DATABASE_URL')

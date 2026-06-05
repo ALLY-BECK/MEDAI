@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Подтверждение входа (2FA) - MEDAI{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-5">
+        <h2 class="text-center mb-4">Двухфакторная аутентификация</h2>
+        <p class="text-center mb-4">Пожалуйста, введите 6-значный код из вашего приложения Google Authenticator.</p>
+
+        <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="mb-4 text-center">
+                {{ form.code.label(class="form-label visually-hidden") }}
+                {% if form.code.errors %}
+                    {{ form.code(class="form-control form-control-lg text-center is-invalid mx-auto", style="max-width: 200px; letter-spacing: 5px; font-size: 24px;", placeholder="123456", maxlength="6", autocomplete="off") }}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.code.errors %}{{ error }}<br>{% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.code(class="form-control form-control-lg text-center mx-auto", style="max-width: 200px; letter-spacing: 5px; font-size: 24px;", placeholder="123456", maxlength="6", autocomplete="off") }}
+                {% endif %}
+            </div>
+
+            <div class="d-grid mx-auto" style="max-width: 200px;">
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

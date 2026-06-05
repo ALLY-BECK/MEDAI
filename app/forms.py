@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, RadioField, validators
+from wtforms import StringField, PasswordField, SubmitField, RadioField, HiddenField, validators
 from app.models import User
 
 class RegistrationForm(FlaskForm):
@@ -38,6 +38,10 @@ class RegistrationForm(FlaskForm):
         validators.EqualTo('password', message='Пароли не совпадают')
     ])
 
+    captcha_token = HiddenField('Captcha', validators=[
+        validators.DataRequired('Требуется CAPTCHA-токен (подтвердите, что вы не робот)')
+    ])
+
     submit = SubmitField('Зарегистрироваться')
 
     def validate_email(self, field):
@@ -65,3 +69,10 @@ class LoginForm(FlaskForm):
     ])
 
     submit = SubmitField('Войти')
+
+class Verify2FAForm(FlaskForm):
+    code = StringField('Код аутентификации (6 цифр)', validators=[
+        validators.DataRequired('Поле обязательно'),
+        validators.Regexp(r'^\d{6}$', message='Код должен состоять из 6 цифр')
+    ])
+    submit = SubmitField('Подтвердить')
